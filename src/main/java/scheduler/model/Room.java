@@ -8,57 +8,58 @@ import java.util.Objects;
  * Represents a schedulable room.
  */
 public final class Room implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
 
-    private final String name;
-    private int capacity;
-    private String description;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
-    public Room(String name, int capacity, String description) {
-        this.name = Objects.requireNonNull(name, "name").trim();
-        this.capacity = capacity;
-        this.description = description == null ? "" : description.trim();
-    }
+	private final String name;
+	private int capacity;
+	private String description;
 
-    public String getName() {
-        return name;
-    }
+	public Room(String name, int capacity, String description) {
+		this.name = Objects.requireNonNull(name, "name").trim();
+		this.capacity = capacity;
+		this.description = description == null ? "" : description.trim();
+	}
 
-    public int getCapacity() {
-        return capacity;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
+	public int getCapacity() {
+		return capacity;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public void setCapacity(int capacity) {
+		this.capacity = capacity;
+	}
 
-    public void setDescription(String description) {
-        this.description = description == null ? "" : description.trim();
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof Room other)) {
-            return false;
-        }
-        return name.equalsIgnoreCase(other.name);
-    }
+	public void setDescription(String description) {
+		this.description = description == null ? "" : description.trim();
+	}
 
-    @Override
-    public int hashCode() {
-        return name.toLowerCase().hashCode();
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Room other)) {
+			return false;
+		}
+		return name.equalsIgnoreCase(other.name);
+	}
 
-    @Override
-    public String toString() {
-        return name + " (" + capacity + ")";
-    }
+	@Override
+	public int hashCode() {
+		return name.toLowerCase().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return name + " (" + capacity + ")";
+	}
 }

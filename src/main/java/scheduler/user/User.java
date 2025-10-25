@@ -8,37 +8,38 @@ import scheduler.Role;
  * Base class for all users of the scheduler.
  */
 public abstract class User implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
 
-    private final String username;
-    private final String password;
-    private final Role role;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
-    protected User(String username, String password, Role role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
+	private final String username;
+	private final String password;
+	private final Role role;
 
-    public String getUsername() {
-        return username;
-    }
+	protected User(String username, String password, Role role) {
+		this.username = username;
+		this.password = password;
+		this.role = role;
+	}
 
-    public Role getRole() {
-        return role;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public boolean verifyPassword(String candidate) {
-        return password.equals(candidate);
-    }
+	public Role getRole() {
+		return role;
+	}
 
-    public String getMaskedPassword() {
-        return "*".repeat(Math.max(1, password.length()));
-    }
+	public boolean verifyPassword(String candidate) {
+		return password.equals(candidate);
+	}
 
-    @Override
-    public String toString() {
-        return role + ":" + username;
-    }
+	public String getMaskedPassword() {
+		return "*".repeat(Math.max(1, password.length()));
+	}
+
+	@Override
+	public String toString() {
+		return role + ":" + username;
+	}
 }

@@ -1,17 +1,15 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "java",
-      "name": "Launch Scheduler",
-      "request": "launch",
-      "mainClass": "scheduler.Main",
-      "projectName": "Scheduler",
-      "classPaths": [
-        "${workspaceFolder}/out"
-      ],
-      "preLaunchTask": "Compile Scheduler",
-      "console": "integratedTerminal"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "java",
+			"name": "Launch Scheduler",
+			"request": "launch",
+			"mainClass": "scheduler.Main",
+			"projectName": "Scheduler",
+			"classPaths": ["${workspaceFolder}/out"],
+			"preLaunchTask": "Compile Scheduler",
+			"console": "integratedTerminal"
+		}
+	]
 }
