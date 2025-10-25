@@ -10,8 +10,9 @@
 .settings/
 *.iml
 .idea/
-.vscode/
 
 # OS files
 Thumbs.db
 .DS_Store
+
+data/
