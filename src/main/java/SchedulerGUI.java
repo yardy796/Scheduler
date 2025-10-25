@@ -1,5 +1,3 @@
-package java_codes;
-
 import javax.swing.*;
 import java.awt.*;
 

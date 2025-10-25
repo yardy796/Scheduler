@@ -1,5 +1,3 @@
-package java_codes;
-
 /**
  * Main entry point for the Scheduler Application
  */
