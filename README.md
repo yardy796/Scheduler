@@ -1,38 +1,53 @@
 # Scheduler
 
-Console-based scheduling application with role-based access control and persistent storage.
+Role-aware scheduling application with both console and JavaFX user interfaces.
 
 ## Features
 
--   Role-aware login with default `admin`/`admin` credentials
--   Room catalogue management with capacity tracking
--   Booking creation, update, and cancellation with conflict detection
--   Embedded SQLite persistence stored in `data/scheduler.db`
+- Role-aware login with default `admin` / `admin` credentials
+- Room catalogue management with capacity tracking
+- Booking creation, update, and cancellation with conflict detection
+- File-based persistence stored under `data/`
+- JavaFX desktop UI for viewing and managing rooms, bookings, and users (subject to permissions)
 
 ## Requirements
 
--   Java 21 or later
--   [SQLite JDBC driver](https://github.com/xerial/sqlite-jdbc) (`sqlite-jdbc-x.y.z.jar`) placed on the runtime classpath (e.g. `lib/sqlite-jdbc.jar`; the VS Code launch config also checks `src/main/java/lib/sqlite-jdbc.jar`)
+- Java 21 or later
+- JavaFX 21 SDK
 
-## Running the application
+## Building
 
-1. Compile the sources:
-   ```pwsh
-   javac --release 21 -d out $(Get-ChildItem -Recurse -Filter *.java -Path src/main/java | ForEach-Object FullName)
-   ```
-2. Launch the console UI (adjust the driver filename/path as needed):
-   ```pwsh
-   java -cp "out;lib/sqlite-jdbc.jar" scheduler.Main
-   ```
-   Alternatively, you may simply hit `F5` (or Run) in VSCode.
+Use the VS Code task **Compile Scheduler** (Ctrl/Cmd + Shift + B). It looks for JavaFX automatically and produces class files in `out/`.
+
+To build manually from PowerShell:
+
+```pwsh
+$sources = Get-ChildItem -Recurse -Filter *.java -Path src/main/java | ForEach-Object FullName
+$modulePath = "$env:JAVAFX_HOME/lib"
+javac --release 21 -d out --module-path $modulePath --add-modules "javafx.controls,javafx.fxml" $sources
+```
+
+If you keep the SDK inside the project (for example at `lib/javafx`), change `$modulePath` accordingly.
+
+## Running
+
+### Console interface
+
+```pwsh
+java -cp out scheduler.Main
+```
+
+### JavaFX interface
+
+```pwsh
+$modulePath = "$env:JAVAFX_HOME/lib"
+java --module-path $modulePath --add-modules "javafx.controls,javafx.fxml" -cp out scheduler.ui.GuiLauncher
+```
+
+Set `$modulePath` to `lib/javafx` if you copied the SDK into the repository.
 
 ## Usage notes
 
--   The first run seeds a default admin account (`admin` / `admin`). Change or delete it once you create new admins.
--   Dates use the `yyyy-MM-dd HH:mm` format (24-hour clock).
--   Data now lives in `data/scheduler.db`. Deleting this file resets the application state.
-
-## Roadmap
-
--   Optional JavaFX front-end
--   Automated tests for booking conflict scenarios
+- The first run seeds a default admin account (`admin` / `admin`). Change or delete it once you create new admins.
+- Dates use the `yyyy-MM-dd HH:mm` format (24-hour clock).
+- Delete the `data/` directory to reset the application state.

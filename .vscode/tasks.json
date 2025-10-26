@@ -9,8 +9,8 @@
 				"-NoProfile",
 				"-ExecutionPolicy",
 				"Bypass",
-				"-Command",
-				"& { $sources = Get-ChildItem -Recurse -Filter *.java -Path 'src/main/java'; if($sources.Count -eq 0){ Write-Error 'No sources found'; exit 1 }; if(!(Test-Path 'out')){ New-Item -ItemType Directory -Path 'out' | Out-Null }; javac --release 21 -d out @($sources.FullName) }"
+				"-File",
+				"${workspaceFolder}\\scripts\\compile-scheduler.ps1"
 			],
 			"group": "build",
 			"presentation": {

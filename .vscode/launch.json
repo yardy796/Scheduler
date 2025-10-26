@@ -14,6 +14,21 @@
 			],
 			"preLaunchTask": "Compile Scheduler",
 			"console": "integratedTerminal"
+		},
+		{
+			"type": "java",
+			"name": "Launch Scheduler GUI",
+			"request": "launch",
+			"mainClass": "scheduler.ui.GuiLauncher",
+			"projectName": "Scheduler",
+			"classPaths": [
+				"${workspaceFolder}/out",
+				"${workspaceFolder}/lib/sqlite-jdbc.jar",
+				"${workspaceFolder}/src/main/java/lib/sqlite-jdbc.jar"
+			],
+			"vmArgs": "-Djava.library.path=\"${env:JAVAFX_HOME}\\bin;${workspaceFolder}/src/main/java/lib/javafx/bin\" --module-path \"${env:JAVAFX_HOME}\\lib;${workspaceFolder}/src/main/java/lib/javafx\" --add-modules javafx.controls,javafx.fxml -Dprism.order=sw",
+			"preLaunchTask": "Compile Scheduler",
+			"console": "integratedTerminal"
 		}
 	]
 }
