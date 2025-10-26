@@ -1,8 +1,10 @@
 package scheduler.util;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import scheduler.model.Booking;
 import scheduler.model.Room;
@@ -21,12 +23,30 @@ public final class ConflictChecker {
 		LocalDateTime end,
 		UUID excludeId
 	) {
-		return bookings
+		return findConflicts(bookings, room, start, end, excludeId)
 			.stream()
-			.filter(b -> b.getRoom().getName().equalsIgnoreCase(room.getName()))
-			.filter(b -> excludeId == null || !b.getId().equals(excludeId))
-			.filter(b -> overlap(b.getStart(), b.getEnd(), start, end))
 			.findFirst();
+	}
+
+	public static List<Booking> findConflicts(
+		List<Booking> bookings,
+		Room room,
+		LocalDateTime start,
+		LocalDateTime end,
+		UUID excludeId
+	) {
+		Set<Booking> conflicts = new LinkedHashSet<>();
+		for (Booking booking : bookings) {
+			boolean sameRoom = booking
+				.getRoom()
+				.getName()
+				.equalsIgnoreCase(room.getName());
+			boolean differentId = excludeId == null || !booking.getId().equals(excludeId);
+			if (sameRoom && differentId && overlap(booking.getStart(), booking.getEnd(), start, end)) {
+				conflicts.add(booking);
+			}
+		}
+		return List.copyOf(conflicts);
 	}
 
 	private static boolean overlap(

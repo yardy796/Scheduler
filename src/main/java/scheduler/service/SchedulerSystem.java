@@ -1,14 +1,21 @@
 package scheduler.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import scheduler.Role;
 import scheduler.model.Booking;
 import scheduler.model.Room;
+import scheduler.model.TimeSlot;
 import scheduler.persistence.FileManager;
 import scheduler.user.Admin;
 import scheduler.user.Guest;
@@ -135,18 +142,8 @@ public final class SchedulerSystem {
 	) {
 		requireBookingCreationPermission(actingUser);
 		Room room = getRoomByName(roomName);
-		ConflictChecker.findConflict(
-			bookings,
-			room,
-			start,
-			end,
-			null
-		).ifPresent(conflict -> {
-			throw new IllegalStateException(
-				"Requested slot conflicts with booking " + conflict.getId()
-			);
-		});
-		Booking booking = new Booking(
+		ensureNoConflict(room, start, end, null);
+		Booking booking = createBookingInternal(
 			room,
 			start,
 			end,
@@ -155,6 +152,34 @@ public final class SchedulerSystem {
 		bookings.add(booking);
 		persist();
 		return booking;
+	}
+
+	public List<Booking> createBookings(
+		User actingUser,
+		String roomName,
+		List<TimeSlot> slots
+	) {
+		requireBookingCreationPermission(actingUser);
+		Objects.requireNonNull(slots, "slots");
+		if (slots.isEmpty()) {
+			throw new IllegalArgumentException("At least one time slot is required");
+		}
+		Room room = getRoomByName(roomName);
+		List<Booking> newBookings = new ArrayList<>();
+		for (TimeSlot slot : slots) {
+			ensureNoConflict(room, slot.start(), slot.end(), null);
+			newBookings.add(
+				createBookingInternal(
+					room,
+					slot.start(),
+					slot.end(),
+					actingUser.getUsername()
+				)
+			);
+		}
+		bookings.addAll(newBookings);
+		persist();
+		return List.copyOf(newBookings);
 	}
 
 	public List<Booking> listBookings(User actingUser) {
@@ -187,21 +212,72 @@ public final class SchedulerSystem {
 	) {
 		Booking booking = findBooking(bookingId);
 		ensureBookingAccess(actingUser, booking);
-		ConflictChecker.findConflict(
-			bookings,
-			booking.getRoom(),
-			start,
-			end,
-			booking.getId()
-		).ifPresent(conflict -> {
-			throw new IllegalStateException(
-				"Requested slot conflicts with booking " + conflict.getId()
-			);
-		});
+		ensureNoConflict(booking.getRoom(), start, end, booking.getId());
 		booking.setStart(start);
 		booking.setEnd(end);
 		persist();
 		return booking;
+	}
+
+	public List<TimeSlot> generateRecurringSlots(
+		LocalDate startDate,
+		LocalDate endDate,
+		LocalTime startTime,
+		LocalTime endTime,
+		Set<DayOfWeek> daysOfWeek
+	) {
+		Objects.requireNonNull(startDate, "startDate");
+		Objects.requireNonNull(endDate, "endDate");
+		Objects.requireNonNull(startTime, "startTime");
+		Objects.requireNonNull(endTime, "endTime");
+		Objects.requireNonNull(daysOfWeek, "daysOfWeek");
+		if (!startTime.isBefore(endTime)) {
+			throw new IllegalArgumentException("Start time must be before end time");
+		}
+		if (endDate.isBefore(startDate)) {
+			throw new IllegalArgumentException("End date cannot be before start date");
+		}
+		if (daysOfWeek.isEmpty()) {
+			throw new IllegalArgumentException("At least one day of week must be selected");
+		}
+		List<TimeSlot> slots = new ArrayList<>();
+		LocalDate cursor = startDate;
+		while (!cursor.isAfter(endDate)) {
+			if (daysOfWeek.contains(cursor.getDayOfWeek())) {
+				LocalDateTime slotStart = cursor.atTime(startTime);
+				LocalDateTime slotEnd = cursor.atTime(endTime);
+				slots.add(new TimeSlot(slotStart, slotEnd));
+			}
+			cursor = cursor.plusDays(1);
+		}
+		if (slots.isEmpty()) {
+			throw new IllegalArgumentException(
+				"No slots generated; check selected days and date range"
+			);
+		}
+		return Collections.unmodifiableList(slots);
+	}
+
+	public List<Booking> findConflicts(
+		String roomName,
+		List<TimeSlot> slots,
+		UUID excludeId
+	) {
+		Objects.requireNonNull(slots, "slots");
+		Room room = getRoomByName(roomName);
+		Set<Booking> conflicts = new LinkedHashSet<>();
+		for (TimeSlot slot : slots) {
+			conflicts.addAll(
+				ConflictChecker.findConflicts(
+					bookings,
+					room,
+					slot.start(),
+					slot.end(),
+					excludeId
+				)
+			);
+		}
+		return List.copyOf(conflicts);
 	}
 
 	private void ensureDefaultAdmin() {
@@ -215,11 +291,11 @@ public final class SchedulerSystem {
 	}
 
 	private void ensureUniqueUsername(String username) {
-		findUser(username).ifPresent(user -> {
+		if (findUser(username).isPresent()) {
 			throw new IllegalArgumentException(
 				"Username already exists: " + username
 			);
-		});
+		}
 	}
 
 	private void ensureRoomNameUnique(String name) {
@@ -267,6 +343,30 @@ public final class SchedulerSystem {
 
 	private void persist() {
 		fileManager.persistAll(users, rooms, bookings);
+	}
+
+	private void ensureNoConflict(
+		Room room,
+		LocalDateTime start,
+		LocalDateTime end,
+		UUID excludeId
+	) {
+		ConflictChecker
+			.findConflict(bookings, room, start, end, excludeId)
+			.ifPresent(conflict -> {
+				throw new IllegalStateException(
+					"Requested slot conflicts with booking " + conflict.getId()
+				);
+			});
+	}
+
+	private Booking createBookingInternal(
+		Room room,
+		LocalDateTime start,
+		LocalDateTime end,
+		String username
+	) {
+		return new Booking(room, start, end, username);
 	}
 
 	private void requirePermission(
